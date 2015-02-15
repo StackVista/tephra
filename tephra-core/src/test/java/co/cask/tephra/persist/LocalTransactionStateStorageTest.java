@@ -17,8 +17,8 @@
 package co.cask.tephra.persist;
 
 import co.cask.tephra.TxConstants;
-import co.cask.tephra.snapshot.DefaultSnapshotCodec;
 import co.cask.tephra.snapshot.SnapshotCodecProvider;
+import co.cask.tephra.snapshot.SnapshotCodecV2;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.junit.ClassRule;
@@ -40,7 +40,7 @@ public class LocalTransactionStateStorageTest extends AbstractTransactionStateSt
     File testDir = tmpDir.newFolder(testName);
     Configuration conf = HBaseConfiguration.create();
     conf.set(TxConstants.Manager.CFG_TX_SNAPSHOT_LOCAL_DIR, testDir.getAbsolutePath());
-    conf.set(TxConstants.Persist.CFG_TX_SNAPHOT_CODEC_CLASSES, DefaultSnapshotCodec.class.getName());
+    conf.set(TxConstants.Persist.CFG_TX_SNAPHOT_CODEC_CLASSES, SnapshotCodecV2.class.getName());
 
     return conf;
   }

@@ -25,6 +25,8 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Test for verifying TransactionServiceMain works correctly.
  */
@@ -58,6 +60,8 @@ public class TransactionServiceMainTest {
 
       try {
         t.start();
+        // Wait for service to startup
+        TimeUnit.SECONDS.sleep(5);
         TransactionServiceClient.doMain(true, conf);
       } finally {
         main.stop();

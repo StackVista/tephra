@@ -19,6 +19,7 @@ package co.cask.tephra.persist;
 import co.cask.tephra.ChangeId;
 import co.cask.tephra.Transaction;
 import co.cask.tephra.TransactionManager;
+import co.cask.tephra.TransactionType;
 import co.cask.tephra.TxConstants;
 import co.cask.tephra.metrics.TxMetricsCollector;
 import com.google.common.collect.Lists;
@@ -39,6 +40,7 @@ import java.util.Map;
 import java.util.NavigableMap;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -284,7 +286,7 @@ public abstract class AbstractTransactionStateStorageTest {
       Map<Long, Set<ChangeId>> committed = Maps.newHashMap();
       TransactionSnapshot snapshot = new TransactionSnapshot(now, 0, writePointer++, invalid,
                                                              inprogress, committing, committed);
-      TransactionEdit dummyEdit = TransactionEdit.createStarted(1, 0, Long.MAX_VALUE);
+      TransactionEdit dummyEdit = TransactionEdit.createStarted(1, 0, Long.MAX_VALUE, TransactionType.SHORT);
 
       // write snapshot 1
       storage.writeSnapshot(snapshot);
@@ -380,10 +382,12 @@ public abstract class AbstractTransactionStateStorageTest {
       // make some "long" transactions
       if (i % 20 == 0) {
         inProgress.put(startPointer + i,
-                       new TransactionManager.InProgressTx(startPointer - 1, -currentTime));
+                       new TransactionManager.InProgressTx(startPointer - 1, currentTime + TimeUnit.DAYS.toSeconds(1),
+                                                           TransactionType.LONG));
       } else {
         inProgress.put(startPointer + i,
-                       new TransactionManager.InProgressTx(startPointer - 1, currentTime + 300000L));
+                       new TransactionManager.InProgressTx(startPointer - 1, currentTime + 300000L, 
+                                                           TransactionType.SHORT));
       }
     }
 
@@ -437,7 +441,7 @@ public abstract class AbstractTransactionStateStorageTest {
         case INPROGRESS:
           edits.add(
             TransactionEdit.createStarted(writePointer, writePointer - 1,
-                                          System.currentTimeMillis() + 300000L));
+                                          System.currentTimeMillis() + 300000L, TransactionType.SHORT));
           break;
         case COMMITTING:
           edits.add(TransactionEdit.createCommitting(writePointer, generateChangeSet(10)));

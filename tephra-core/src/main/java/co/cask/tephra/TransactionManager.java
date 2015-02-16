@@ -970,11 +970,8 @@ public class TransactionManager extends AbstractService {
       }
     }
 
-    long txReadPointer = readPointer;
-    if(readYourOwnWrites){
-      txReadPointer = writePointer;
-    }
-    return new Transaction(txReadPointer, writePointer, invalidArray, array, firstShortTx);
+    return new Transaction(readYourOwnWrites ? writePointer : readPointer,
+                            writePointer, invalidArray, array, firstShortTx);
   }
 
   private void appendToLog(TransactionEdit edit) {

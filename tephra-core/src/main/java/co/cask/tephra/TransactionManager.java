@@ -1058,6 +1058,7 @@ public class TransactionManager extends AbstractService {
     private final TransactionType type;
 
     // For backwards compatibility when long running txns were represented with -1 expiration
+    @Deprecated
     public InProgressTx(long visibilityUpperBound, long expiration) {
       this.visibilityUpperBound = visibilityUpperBound;
       if (expiration >= 0) {

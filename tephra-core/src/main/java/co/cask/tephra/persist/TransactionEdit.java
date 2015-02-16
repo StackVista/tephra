@@ -248,7 +248,8 @@ public class TransactionEdit implements Writable {
       .toString();
   }
 
-  private static interface TransactionEditCodec {
+  // package-private for unit-test access
+  static interface TransactionEditCodec {
     // doesn't read version field
     void decode(TransactionEdit dest, DataInput in) throws IOException;
 

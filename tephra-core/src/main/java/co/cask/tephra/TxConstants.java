@@ -91,6 +91,10 @@ public class TxConstants {
     public static final String CFG_TX_SNAPSHOT_RETAIN = "data.tx.snapshot.retain";
     /** Default value for number of most recent snapshots to retain. */
     public static final int DEFAULT_TX_SNAPSHOT_RETAIN = 10;
+
+    public static final String CFG_TX_READ_YOUR_OWN_WRITES = "data.tx.readownwrites";
+
+    public static final boolean DEFAULT_TX_READ_YOUR_OWN_WRITES = false;
   }
 
   /**

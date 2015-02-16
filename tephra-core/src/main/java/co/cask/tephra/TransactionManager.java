@@ -137,6 +137,8 @@ public class TransactionManager extends AbstractService {
   private final int defaultTimeout;
   private DaemonThreadExecutor cleanupThread = null;
 
+  private final boolean readYourOwnWrites;
+
   private volatile TransactionLog currentLog;
 
   // timestamp of the last completed snapshot
@@ -171,6 +173,9 @@ public class TransactionManager extends AbstractService {
     // must always keep at least 1 snapshot
     snapshotRetainCount = Math.max(conf.getInt(TxConstants.Manager.CFG_TX_SNAPSHOT_RETAIN,
                                                TxConstants.Manager.DEFAULT_TX_SNAPSHOT_RETAIN), 1);
+    readYourOwnWrites = conf.getBoolean(TxConstants.Manager.CFG_TX_READ_YOUR_OWN_WRITES,
+            TxConstants.Manager.DEFAULT_TX_READ_YOUR_OWN_WRITES);
+
     this.txMetricsCollector = txMetricsCollector;
     clear();
   }
@@ -965,7 +970,7 @@ public class TransactionManager extends AbstractService {
       }
     }
 
-    return new Transaction(readPointer, writePointer, invalidArray, array, firstShortTx);
+    return new Transaction(readYourOwnWrites ? writePointer : readPointer, writePointer, invalidArray, array, firstShortTx);
   }
 
   private void appendToLog(TransactionEdit edit) {

@@ -57,19 +57,19 @@ public class TxUtils {
    * @param tx The current transaction
    * @return The maximum timestamp (exclusive) to use for time-range operations
    */
-  public static long getMaxVisibleTimestamp(Transaction tx, OperationWithAttributes operation) {
+  public static long getMaxVisibleTimestamp (Transaction tx, OperationWithAttributes operation) {
     TimeRange timeRange;
-    if(operation instanceof Get){
+    if (operation instanceof Get) {
       timeRange = ((Get) operation).getTimeRange();
-    }else if(operation instanceof Scan){
+    } else if (operation instanceof Scan) {
       timeRange = ((Scan) operation).getTimeRange();
-    }else{
+    } else {
       timeRange = null; //TODO throw Exception of some kind!
     }
     // NOTE: +1 here because we want read up to readpointer inclusive, but timerange's end is exclusive
     long maxTxTs = tx.getReadPointer() + 1;
-    if(timeRange.getMax() < (tx.getReadPointer() / TxConstants.MAX_TX_PER_MS)) {
-      maxTxTs = timeRange.getMax() * TxConstants.MAX_TX_PER_MS;
+    if (timeRange.getMax() < (tx.getReadPointer())) {
+      maxTxTs = timeRange.getMax();
     }
 
     return maxTxTs;

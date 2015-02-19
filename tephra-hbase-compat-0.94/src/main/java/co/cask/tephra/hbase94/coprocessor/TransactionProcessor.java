@@ -165,7 +165,7 @@ public class TransactionProcessor extends BaseRegionObserver {
         LOG.trace("Applying filter to SCAN for transaction " + tx.getWritePointer());
       }
       scan.setMaxVersions();
-      scan.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), TxUtils.getMaxVisibleTimestamp(tx,scan));
+      scan.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), TxUtils.getMaxVisibleTimestamp(tx, scan));
       Filter newFilter = Filters.combine(getTransactionFilter(tx, ScanType.USER_SCAN), scan.getFilter());
       scan.setFilter(newFilter);
     }

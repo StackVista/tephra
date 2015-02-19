@@ -230,4 +230,9 @@ public class TransactionContext {
       throw cause;
     }
   }
+
+  public long getWritePointer() {
+    return currentTx.getWritePointer();
+  }
+
 }

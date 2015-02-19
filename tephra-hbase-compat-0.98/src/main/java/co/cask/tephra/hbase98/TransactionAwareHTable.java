@@ -526,17 +526,17 @@ public class TransactionAwareHTable implements HTableInterface, TransactionAware
 
   // Helpers to get copies of objects with the timestamp set to the current transaction timestamp.
 
-  private Get transactionalizeAction(Get get) throws IOException {
+  protected Get transactionalizeAction(Get get) throws IOException {
     txCodec.addToOperation(get, tx);
     return get;
   }
 
-  private Scan transactionalizeAction(Scan scan) throws IOException {
+  protected Scan transactionalizeAction(Scan scan) throws IOException {
     txCodec.addToOperation(scan, tx);
     return scan;
   }
 
-  private Put transactionalizeAction(Put put) throws IOException {
+  protected Put transactionalizeAction(Put put) throws IOException {
     Put txPut = new Put(put.getRow(), tx.getWritePointer());
     Set<Map.Entry<byte[], List<KeyValue>>> familyMap = put.getFamilyMap().entrySet();
     if (!familyMap.isEmpty()) {
@@ -558,7 +558,7 @@ public class TransactionAwareHTable implements HTableInterface, TransactionAware
     return txPut;
   }
 
-  private Put transactionalizeAction(Delete delete) throws IOException {
+  protected Put transactionalizeAction(Delete delete) throws IOException {
     long transactionTimestamp = tx.getWritePointer();
 
     byte[] deleteRow = delete.getRow();

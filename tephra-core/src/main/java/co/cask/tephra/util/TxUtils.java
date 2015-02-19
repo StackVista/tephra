@@ -21,6 +21,10 @@ import co.cask.tephra.TransactionManager;
 import co.cask.tephra.TxConstants;
 import co.cask.tephra.persist.TransactionSnapshot;
 import com.google.common.primitives.Longs;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.OperationWithAttributes;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.io.TimeRange;
 
 import java.util.Map;
 
@@ -49,12 +53,26 @@ public class TxUtils {
 
   /**
    * Returns the maximum timestamp to use for time-range operations, based on the given transaction.
+   * Also checks if a timeRange is already set and than uses this!
    * @param tx The current transaction
    * @return The maximum timestamp (exclusive) to use for time-range operations
    */
-  public static long getMaxVisibleTimestamp(Transaction tx) {
+  public static long getMaxVisibleTimestamp(Transaction tx, OperationWithAttributes operation) {
+    TimeRange timeRange;
+    if(operation instanceof Get){
+      timeRange = ((Get) operation).getTimeRange();
+    }else if(operation instanceof Scan){
+      timeRange = ((Scan) operation).getTimeRange();
+    }else{
+      timeRange = null; //TODO throw Exception of some kind!
+    }
     // NOTE: +1 here because we want read up to readpointer inclusive, but timerange's end is exclusive
-    return tx.getReadPointer() + 1;
+    long maxTxTs = tx.getReadPointer() + 1;
+    if(timeRange.getMax() < (tx.getReadPointer() / TxConstants.MAX_TX_PER_MS)) {
+      maxTxTs = timeRange.getMax() * TxConstants.MAX_TX_PER_MS;
+    }
+
+    return maxTxTs;
   }
 
   /**

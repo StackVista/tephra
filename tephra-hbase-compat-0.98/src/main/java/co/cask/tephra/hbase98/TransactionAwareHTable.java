@@ -553,7 +553,7 @@ public class TransactionAwareHTable implements HTableInterface, TransactionAware
     for (Map.Entry<String, byte[]> entry : put.getAttributesMap().entrySet()) {
       txPut.setAttribute(entry.getKey(), entry.getValue());
     }
-    txPut.setWriteToWAL(put.getWriteToWAL());
+    txPut.setDurability(put.getDurability());
     txCodec.addToOperation(txPut, tx);
     return txPut;
   }

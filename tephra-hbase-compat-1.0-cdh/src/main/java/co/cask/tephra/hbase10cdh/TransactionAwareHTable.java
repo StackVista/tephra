@@ -576,7 +576,7 @@ public class TransactionAwareHTable extends AbstractTransactionAwareTable
     for (Map.Entry<String, byte[]> entry : put.getAttributesMap().entrySet()) {
       txPut.setAttribute(entry.getKey(), entry.getValue());
     }
-    txPut.setWriteToWAL(put.getWriteToWAL());
+    txPut.setDurability(put.getDurability());
     addToOperation(txPut, tx);
     return txPut;
   }

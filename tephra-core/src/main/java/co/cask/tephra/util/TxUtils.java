@@ -49,18 +49,6 @@ public class TxUtils {
   }
 
   /**
-   * Returns the maximum timestamp to use for time-range operations, based on the given transaction.
-   * @param tx The current transaction
-   * @return The maximum timestamp (exclusive) to use for time-range operations
-   */
-  public static long getMaxVisibleTimestamp(Transaction tx) {
-    // NOTE: +1 here because we want read up to writepointer inclusive, but timerange's end is exclusive
-    // however, we also need to guard against overflow in the case write pointer is set to MAX_VALUE
-    return tx.getWritePointer() < Long.MAX_VALUE ?
-        tx.getWritePointer() + 1 : tx.getWritePointer();
-  }
-
-  /**
    * Creates a "dummy" transaction based on the given snapshot's state.  This is not a "real" transaction in the
    * sense that it has not been started, data should not be written with it, and it cannot be committed.  However,
    * this can still be useful for filtering data according to the snapshot's state.  Instead of the actual

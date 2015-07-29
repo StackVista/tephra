@@ -17,6 +17,7 @@
 package co.cask.tephra.hbase96.coprocessor;
 
 import co.cask.tephra.ChangeId;
+import co.cask.tephra.Transaction;
 import co.cask.tephra.TransactionManager;
 import co.cask.tephra.TransactionType;
 import co.cask.tephra.TxConstants;
@@ -474,6 +475,13 @@ public class TransactionProcessorTest {
     assertNotNull(cachedSnapshot);
     assertEquals(invalidSet, cachedSnapshot.getInvalid());
     cache.stopAndWait();
+  }
+
+  @Test
+  public void testMaxVisibleTimestamp() {
+    // make sure we don't overflow with MAX_VALUE write pointer
+    assertEquals(Long.MAX_VALUE, new TransactionProcessor().getMaxVisibleTimestamp(Transaction.ALL_VISIBLE_LATEST,
+      new Scan()));
   }
 
   private static class MockRegionServerServices implements RegionServerServices {

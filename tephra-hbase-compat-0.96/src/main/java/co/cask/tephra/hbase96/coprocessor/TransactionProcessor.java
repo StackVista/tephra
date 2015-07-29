@@ -46,6 +46,7 @@ import org.apache.hadoop.hbase.coprocessor.ObserverContext;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.filter.FilterBase;
+import org.apache.hadoop.hbase.io.TimeRange;
 import org.apache.hadoop.hbase.regionserver.InternalScanner;
 import org.apache.hadoop.hbase.regionserver.KeyValueScanner;
 import org.apache.hadoop.hbase.regionserver.RegionScanner;
@@ -151,7 +152,7 @@ public class TransactionProcessor extends BaseRegionObserver {
     if (tx != null) {
       projectFamilyDeletes(get);
       get.setMaxVersions();
-      get.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), TxUtils.getMaxVisibleTimestamp(tx));
+      get.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), getMaxVisibleTimestamp(tx, get));
       Filter newFilter = Filters.combine(getTransactionFilter(tx, ScanType.USER_SCAN), get.getFilter());
       get.setFilter(newFilter);
     }
@@ -203,7 +204,7 @@ public class TransactionProcessor extends BaseRegionObserver {
     if (tx != null) {
       projectFamilyDeletes(scan);
       scan.setMaxVersions();
-      scan.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), TxUtils.getMaxVisibleTimestamp(tx));
+      scan.setTimeRange(TxUtils.getOldestVisibleTimestamp(ttlByFamily, tx), getMaxVisibleTimestamp(tx, scan));
       Filter newFilter = Filters.combine(getTransactionFilter(tx, ScanType.USER_SCAN), scan.getFilter());
       scan.setFilter(newFilter);
     }
@@ -305,6 +306,32 @@ public class TransactionProcessor extends BaseRegionObserver {
    */
   protected Filter getTransactionFilter(Transaction tx, ScanType scanType) {
     return new TransactionVisibilityFilter(tx, ttlByFamily, allowEmptyValues, scanType);
+  }
+
+
+  /**
+   * Returns the maximum timestamp to use for time-range operations, based on the given transaction.
+   * Also checks if a timeRange is already set and than uses this!
+   * @param tx The current transaction
+   * @return The maximum timestamp (exclusive) to use for time-range operations
+   */
+  protected long getMaxVisibleTimestamp(Transaction tx, OperationWithAttributes operation) {
+    TimeRange timeRange;
+    if (operation instanceof Get) {
+      timeRange = ((Get) operation).getTimeRange();
+    } else if (operation instanceof Scan) {
+      timeRange = ((Scan) operation).getTimeRange();
+    } else {
+      timeRange = null; //TODO throw Exception of some kind!
+    }
+    // NOTE: +1 here because we want read up to writepointer inclusive, but timerange's end is exclusive
+    // however, we also need to guard against overflow in the case write pointer is set to MAX_VALUE
+    long result = tx.getWritePointer() < Long.MAX_VALUE ? tx.getWritePointer() + 1 : tx.getWritePointer();
+    if (timeRange.getMax() < tx.getWritePointer()) {
+      result = timeRange.getMax();
+    }
+
+    return result;
   }
 
   /**

@@ -517,17 +517,17 @@ public class TransactionAwareHTable extends AbstractTransactionAwareTable
 
   // Helpers to get copies of objects with the timestamp set to the current transaction timestamp.
 
-  private Get transactionalizeAction(Get get) throws IOException {
+  protected Get transactionalizeAction(Get get) throws IOException {
     addToOperation(get, tx);
     return get;
   }
 
-  private Scan transactionalizeAction(Scan scan) throws IOException {
+  protected Scan transactionalizeAction(Scan scan) throws IOException {
     addToOperation(scan, tx);
     return scan;
   }
 
-  private Put transactionalizeAction(Put put) throws IOException {
+  protected Put transactionalizeAction(Put put) throws IOException {
     Put txPut = new Put(put.getRow(), tx.getWritePointer());
     Set<Map.Entry<byte[], List<Cell>>> familyMap = put.getFamilyCellMap().entrySet();
     if (!familyMap.isEmpty()) {
@@ -549,7 +549,7 @@ public class TransactionAwareHTable extends AbstractTransactionAwareTable
     return txPut;
   }
 
-  private Delete transactionalizeAction(Delete delete) throws IOException {
+  protected Delete transactionalizeAction(Delete delete) throws IOException {
     long transactionTimestamp = tx.getWritePointer();
 
     byte[] deleteRow = delete.getRow();

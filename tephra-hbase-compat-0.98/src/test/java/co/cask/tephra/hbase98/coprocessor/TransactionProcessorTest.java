@@ -18,6 +18,7 @@ package co.cask.tephra.hbase98.coprocessor;
 
 import co.cask.tephra.ChangeId;
 import co.cask.tephra.Transaction;
+import co.cask.tephra.TransactionCodec;
 import co.cask.tephra.TransactionManager;
 import co.cask.tephra.TransactionType;
 import co.cask.tephra.TxConstants;
@@ -28,6 +29,7 @@ import co.cask.tephra.persist.HDFSTransactionStateStorage;
 import co.cask.tephra.persist.TransactionSnapshot;
 import co.cask.tephra.snapshot.DefaultSnapshotCodec;
 import co.cask.tephra.snapshot.SnapshotCodecProvider;
+import co.cask.tephra.util.ConfigurationFactory;
 import co.cask.tephra.util.TxUtils;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
@@ -73,7 +75,9 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.hbase.zookeeper.ZooKeeperWatcher;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.zookeeper.KeeperException;
+import org.junit.After;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -122,6 +126,9 @@ public class TransactionProcessorTest {
   private static LongArrayList invalidSet = new LongArrayList(new long[]{V[3], V[5], V[7]});
   private static TransactionSnapshot txSnapshot;
 
+  private TransactionManager txManager;
+  private TransactionCodec txCodec = new TransactionCodec();
+
   @BeforeClass
   public static void setupBeforeClass() throws Exception {
     Configuration hConf = new Configuration();
@@ -149,6 +156,17 @@ public class TransactionProcessorTest {
     tmpStorage.startAndWait();
     tmpStorage.writeSnapshot(txSnapshot);
     tmpStorage.stopAndWait();
+  }
+
+  @Before
+  public void setup() throws Exception {
+    txManager = new TransactionManager(conf);
+    txManager.startAndWait();
+  }
+
+  @After
+  public void tearDown() throws Exception {
+    txManager.stopAndWait();
   }
 
   @AfterClass
@@ -224,9 +242,12 @@ public class TransactionProcessorTest {
       TransactionStateCache cache = new TransactionStateCacheSupplier(conf).get();
       LOG.info("Coprocessor is using transaction state: " + cache.getLatestState());
 
+      Transaction tx = txManager.startShort();
+
       byte[] row = Bytes.toBytes(1);
       for (int i = 4; i < V.length; i++) {
         Put p = new Put(row);
+        p.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
         p.add(familyBytes, columnBytes, V[i], Bytes.toBytes(V[i]));
         region.put(p);
       }
@@ -235,6 +256,7 @@ public class TransactionProcessorTest {
       // take that cell's timestamp + 1 to simulate a delete in a new tx
       long deleteTs = V[5] + 1;
       Delete d = new Delete(row, deleteTs);
+      d.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       LOG.info("Issuing delete at timestamp " + deleteTs);
       // row deletes are not yet supported (TransactionAwareHTable normally handles this)
       d.deleteColumns(familyBytes, columnBytes);
@@ -250,6 +272,7 @@ public class TransactionProcessorTest {
       // now a normal scan should return row with versions at: V[8], V[6].
       // V[7] is invalid and V[5] and prior are deleted.
       Scan scan = new Scan();
+      scan.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       scan.setMaxVersions(10);
       RegionScanner regionScanner = region.getScanner(scan);
       // should be only one row
@@ -390,17 +413,22 @@ public class TransactionProcessorTest {
       region.initialize();
 
       long now = System.currentTimeMillis() * TxConstants.MAX_TX_PER_MS;
+      Transaction tx = txManager.startShort();
+
       Put p = new Put(rowBytes);
+      p.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       p.add(family1Bytes, columnBytes, now - 10, valBytes);
       region.put(p);
 
       // issue a family delete with an explicit timestamp
       Delete delete = new Delete(rowBytes, now);
       delete.deleteFamily(family1Bytes, now - 5);
+      delete.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       region.delete(delete);
 
       // test that the delete marker preserved the timestamp
       Scan scan = new Scan();
+      scan.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       scan.setMaxVersions();
       RegionScanner scanner = region.getScanner(scan);
       List<Cell> results = Lists.newArrayList();
@@ -420,6 +448,7 @@ public class TransactionProcessorTest {
 
       // with a filtered scan the original put should disappear
       scan = new Scan();
+      scan.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
       scan.setMaxVersions();
       scan.setFilter(new TransactionVisibilityFilter(
           TxUtils.createDummyTransaction(txSnapshot), new TreeMap<byte[], Long>(), false, ScanType.USER_SCAN));

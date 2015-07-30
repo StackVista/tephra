@@ -606,6 +606,8 @@ public class TransactionAwareHTable extends AbstractTransactionAwareTable
         }
       }
     }
+    addToOperation(txDelete, tx);
+
     return txDelete;
   }
 

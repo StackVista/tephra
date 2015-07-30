@@ -171,6 +171,13 @@ public class TransactionProcessor extends BaseRegionObserver {
       return;
     }
 
+    // Deletes that are not performed from within a transaction should be handled normally to avoid
+    // interfering with tables that are not 'transactionalized'. One important example is HBase's meta
+    // table which is also updated via deletes.
+    Transaction tx = getFromOperation(delete);
+    if (tx == null) {
+      return;
+    }
     // Other deletes are client-initiated and need to be translated into our own tombstones
     // TODO: this should delegate to the DeleteStrategy implementation.
     Put deleteMarkers = new Put(delete.getRow(), delete.getTimeStamp());

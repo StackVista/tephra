@@ -52,33 +52,21 @@
     </developer>
   </developers>
 
-  <scm>
-    <connection>scm:git:https://github.com/caskdata/tephra.git</connection>
-    <developerConnection>scm:git:git@github.com:caskdata/tephra.git</developerConnection>
-    <url>https://github.com/caskdata/tephra.git</url>
-    <tag>HEAD</tag>
-  </scm>
-
-  <issueManagement>
-    <system>JIRA</system>
-    <url>https://issues.cask.co/browse/TEPHRA</url>
-  </issueManagement>
-
   <repositories>
     <repository>
-      <id>continuuity-public</id>
-      <url>https://repository.continuuity.com/content/groups/public</url>
+      <id>stackstate.artifactory</id>
+      <url>http://192.168.2.58:8081/artifactory/libs-release-local</url>
     </repository>
   </repositories>
 
   <distributionManagement>
     <repository>
-      <id>sonatype.release</id>
-      <url>https://oss.sonatype.org/service/local/staging/deploy/maven2</url>
+      <id>stackstate.artifactory</id>
+      <url>http://192.168.2.58:8081/artifactory/libs-release-local</url>
     </repository>
     <snapshotRepository>
       <id>sonatype.snapshots</id>
-      <url>https://oss.sonatype.org/content/repositories/snapshots</url>
+      <url>http://192.168.2.58:8081/artifactory/libs-snapshot-local</url>
     </snapshotRepository>
   </distributionManagement>
 

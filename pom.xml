@@ -20,7 +20,7 @@
 
   <groupId>co.cask.tephra</groupId>
   <artifactId>tephra</artifactId>
-  <version>0.6.0.1-patched</version>
+  <version>0.6.0-patched</version>
   <packaging>pom</packaging>
   <name>Tephra Transaction System</name>
   <description>Tephra Transaction System</description>

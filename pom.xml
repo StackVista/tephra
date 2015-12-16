@@ -52,6 +52,24 @@
     </developer>
   </developers>
 
+  <repositories>
+    <repository>
+      <id>stackstate.artifactory</id>
+      <url>http://54.194.173.64/artifactory/libs-release-local</url>
+    </repository>
+  </repositories>
+
+  <distributionManagement>
+    <repository>
+      <id>stackstate.artifactory</id>
+      <url>http://54.194.173.64/artifactory/libs-release-local</url>
+    </repository>
+    <snapshotRepository>
+      <id>sonatype.snapshots</id>
+      <url>http://54.194.173.64/artifactory/libs-snapshot-local</url>
+    </snapshotRepository>
+  </distributionManagement>
+
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <surefire.redirectTestOutputToFile>true</surefire.redirectTestOutputToFile>

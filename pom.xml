@@ -29,7 +29,7 @@
   <modules>
     <module>tephra-api</module>
     <module>tephra-core</module>
-    <!-- <module>tephra-hbase-compat-0.96</module> -->
+    <module>tephra-hbase-compat-0.96</module>
     <module>tephra-hbase-compat-0.98</module>
 <!--     <module>tephra-hbase-compat-1.0</module>
     <module>tephra-hbase-compat-1.0-cdh</module>

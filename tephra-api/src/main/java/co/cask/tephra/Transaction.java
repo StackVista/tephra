@@ -32,6 +32,7 @@ public class Transaction {
   private final long firstShortInProgress;
   private final TransactionType type;
   private final long[] checkpointWritePointers;
+  private long[] committed = new long[0];
 
   private VisibilityLevel visibilityLevel = VisibilityLevel.SNAPSHOT;
 
@@ -199,8 +200,11 @@ public class Transaction {
    * invalid transactions).
    */
   public boolean isExcluded(long version) {
-    return Arrays.binarySearch(inProgress, version) >= 0
-      || Arrays.binarySearch(invalids, version) >= 0;
+    return (Arrays.binarySearch(inProgress, version) >= 0 || Arrays.binarySearch(invalids, version) >= 0);
+  }
+
+  private boolean isIncluded(long version) {
+    return Arrays.binarySearch(committed, version) >= 0;
   }
 
   /**
@@ -223,9 +227,10 @@ public class Transaction {
    */
   public boolean isVisible(long version) {
     // either it was committed before or the change belongs to current tx
-    return (version <= getReadPointer() && !isExcluded(version)) ||
-        ((txId == version || isCheckpoint(version)) &&
-            (visibilityLevel == VisibilityLevel.SNAPSHOT || writePointer != version));
+    return isIncluded(version)
+            || (version <= getReadPointer() && !isExcluded(version)) ||
+            ((txId == version || isCheckpoint(version)) &&
+                    (visibilityLevel == VisibilityLevel.SNAPSHOT || writePointer != version));
   }
 
   /**
@@ -251,6 +256,25 @@ public class Transaction {
     return invalids.length + inProgress.length;
   }
 
+  public boolean hasCommitted() {
+    return committed.length > 0;
+  }
+
+  public void setCommitted(long[] committed) {
+    this.committed = committed;
+  }
+
+  public long[] getCommitted() {
+    return this.committed;
+  }
+
+  public long getCommittedMax() {
+    if (committed.length > 0) {
+      return committed[committed.length - 1];
+    } else {
+      return 0;
+    }
+  }
   /**
    * Returns any prior write pointers used in the current transaction.  A new write pointer is issued when the
    * {@code TransactionContext.checkpoint(Transaction)} operation is called, and the prior write pointer is added
@@ -263,18 +287,19 @@ public class Transaction {
   @Override
   public String toString() {
     return new StringBuilder(100)
-      .append(Transaction.class.getSimpleName())
-      .append('{')
-      .append("readPointer: ").append(readPointer)
-      .append(", transactionId: ").append(txId)
-      .append(", writePointer: ").append(writePointer)
-      .append(", invalids: ").append(Arrays.toString(invalids))
-      .append(", inProgress: ").append(Arrays.toString(inProgress))
-      .append(", firstShortInProgress: ").append(firstShortInProgress)
-      .append(", type: ").append(type)
-      .append(", checkpointWritePointers: ").append(Arrays.toString(checkpointWritePointers))
-      .append(", visibilityLevel: ").append(visibilityLevel)
-      .append('}')
-      .toString();
+            .append(Transaction.class.getSimpleName())
+            .append('{')
+            .append("readPointer: ").append(readPointer)
+            .append(", transactionId: ").append(txId)
+            .append(", writePointer: ").append(writePointer)
+            .append(", invalids: ").append(Arrays.toString(invalids))
+            .append(", inProgress: ").append(Arrays.toString(inProgress))
+            .append(", committed: ").append(Arrays.toString(committed))
+            .append(", firstShortInProgress: ").append(firstShortInProgress)
+            .append(", type: ").append(type)
+            .append(", checkpointWritePointers: ").append(Arrays.toString(checkpointWritePointers))
+            .append(", visibilityLevel: ").append(visibilityLevel)
+            .append('}')
+            .toString();
   }
 }

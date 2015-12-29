@@ -33,7 +33,8 @@ struct TTransaction {
   6: TTransactionType type,
   7: i64 writePointer,
   8: list<i64> checkpointWritePointers,
-  9: TVisibilityLevel visibilityLevel
+  9: TVisibilityLevel visibilityLevel,
+  10: list<i64> committed
 }
 
 exception TTransactionNotInProgressException {

@@ -124,6 +124,46 @@ public class TransactionVisibilityFilterTest extends AbstractTransactionVisibili
                  filter.filterKeyValue(newKeyValue("row2", FAM, "val1", now - 1 * TxConstants.MAX_TX_PER_MS)));
   }
 
+  @Test
+  public void testReadCommited() throws Exception {
+
+    Transaction txBefore = txManager.startShort();
+    assertTrue(txManager.canCommit(txBefore, EMPTY_CHANGESET));
+    assertTrue(txManager.commit(txBefore));
+
+    Transaction readingTx1 = txManager.startShort();
+
+    Transaction shortTx2 = txManager.startShort();
+    assertTrue(txManager.canCommit(shortTx2, EMPTY_CHANGESET));
+    assertTrue(txManager.commit(shortTx2));
+
+    Transaction shortTx3 = txManager.startShort();
+    assertTrue(txManager.canCommit(shortTx3, EMPTY_CHANGESET));
+    assertTrue(txManager.commit(shortTx3));
+
+    Transaction tx4Invalidated = txManager.startShort();
+    txManager.invalidate(tx4Invalidated.getTransactionId());
+
+    readingTx1.setCommitted(new long[] {shortTx2.getTransactionId()});
+
+    long now = readingTx1.getVisibilityUpperBound();
+
+    Map<byte[], Long> ttls = Maps.newTreeMap(Bytes.BYTES_COMPARATOR);
+    Filter filter = createFilter(readingTx1, ttls);
+
+    assertEquals(Filter.ReturnCode.INCLUDE_AND_NEXT_COL,
+            filter.filterKeyValue(newKeyValue("row1", "val1", txBefore.getTransactionId())));
+    assertEquals(Filter.ReturnCode.INCLUDE_AND_NEXT_COL,
+            filter.filterKeyValue(newKeyValue("row1", "val1", readingTx1.getTransactionId())));
+    assertEquals(Filter.ReturnCode.INCLUDE_AND_NEXT_COL,
+            filter.filterKeyValue(newKeyValue("row1", "val1", shortTx2.getTransactionId())));
+    assertEquals(Filter.ReturnCode.SKIP,
+            filter.filterKeyValue(newKeyValue("row1", "val1", shortTx3.getTransactionId())));
+    assertEquals(Filter.ReturnCode.SKIP,
+            filter.filterKeyValue(newKeyValue("row1", "val1", tx4Invalidated.getTransactionId())));
+
+  }
+
   protected Filter createFilter(Transaction tx, Map<byte[], Long> familyTTLs) {
     return new TransactionVisibilityFilter(tx, familyTTLs, false, ScanType.USER_SCAN);
   }

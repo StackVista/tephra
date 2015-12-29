@@ -339,6 +339,9 @@ public class TransactionProcessor extends BaseRegionObserver {
       result = timeRange.getMax();
     }
 
+    if (tx.hasCommitted()) {
+      result = Math.max(tx.getCommittedMax() + 1, result);
+    }
     return result;
   }
 

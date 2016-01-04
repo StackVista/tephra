@@ -203,7 +203,7 @@ public class Transaction {
     return (Arrays.binarySearch(inProgress, version) >= 0 || Arrays.binarySearch(invalids, version) >= 0);
   }
 
-  private boolean isIncluded(long version) {
+  private boolean isCommitted(long version) {
     return Arrays.binarySearch(committed, version) >= 0;
   }
 
@@ -227,7 +227,7 @@ public class Transaction {
    */
   public boolean isVisible(long version) {
     // either it was committed before or the change belongs to current tx
-    return isIncluded(version)
+    return isCommitted(version)
             || (version <= getReadPointer() && !isExcluded(version)) ||
             ((txId == version || isCheckpoint(version)) &&
                     (visibilityLevel == VisibilityLevel.SNAPSHOT || writePointer != version));

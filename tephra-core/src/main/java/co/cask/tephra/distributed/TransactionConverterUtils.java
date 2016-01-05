@@ -38,7 +38,8 @@ public final class TransactionConverterUtils {
   }
 
   public static Transaction unwrap(TTransaction thriftTx) {
-    Transaction transaction = new Transaction(thriftTx.getReadPointer(), thriftTx.getTransactionId(), thriftTx.getWritePointer(),
+    Transaction transaction = new Transaction(thriftTx.getReadPointer(), thriftTx.getTransactionId(),
+            thriftTx.getWritePointer(),
             Longs.toArray(thriftTx.getInvalids()), Longs.toArray(thriftTx.getInProgress()),
             thriftTx.getFirstShort(), getTransactionType(thriftTx.getType()),
             Longs.toArray(thriftTx.getCheckpointWritePointers()),

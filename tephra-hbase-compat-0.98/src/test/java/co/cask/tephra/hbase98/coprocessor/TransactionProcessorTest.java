@@ -570,12 +570,14 @@ public class TransactionProcessorTest {
     }
   }
 
-  private void assertGetInvisible(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes) throws IOException {
+  private void assertGetInvisible(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes)
+          throws IOException {
     Result result = resultGet(id, region, readTx);
     assertEquals(0, result.size());
   }
 
-  private void assertGet(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes, byte[] valueBytes) throws IOException {
+  private void assertGet(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes,
+                         byte[] valueBytes) throws IOException {
     Result result = resultGet(id, region, readTx);
     List<Cell> cells = result.getColumnCells(familyBytes, columnBytes);
     assertEquals(1, cells.size());
@@ -590,7 +592,8 @@ public class TransactionProcessorTest {
     return region.get(get);
   }
 
-  private long doPutAndCommit(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region) throws IOException, TransactionNotInProgressException {
+  private long doPutAndCommit(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region)
+          throws IOException, TransactionNotInProgressException {
     Transaction tx = txManager.startShort();
 
     doPut(familyBytes, columnBytes, id, region, tx);
@@ -600,7 +603,8 @@ public class TransactionProcessorTest {
     return tx.getTransactionId();
   }
 
-  private long doPutAndRollback(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region) throws IOException, TransactionNotInProgressException {
+  private long doPutAndRollback(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region)
+          throws IOException, TransactionNotInProgressException {
     Transaction tx = txManager.startShort();
 
     doPut(familyBytes, columnBytes, id, region, tx);
@@ -609,7 +613,8 @@ public class TransactionProcessorTest {
     return tx.getTransactionId();
   }
 
-  private void doPut(byte[] familyBytes, byte[] columnBytes, byte[] row1, HRegion region, Transaction tx) throws IOException {
+  private void doPut(byte[] familyBytes, byte[] columnBytes, byte[] row1, HRegion region, Transaction tx)
+          throws IOException {
     long ts = System.currentTimeMillis();
     Put p = new Put(row1);
     p.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));

@@ -3564,13 +3564,13 @@ public class TTransactionServer {
             case 2: // CHANGES
               if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                 {
-                  org.apache.thrift.protocol.TSet _set24 = iprot.readSetBegin();
-                  struct.changes = new HashSet<ByteBuffer>(2*_set24.size);
-                  for (int _i25 = 0; _i25 < _set24.size; ++_i25)
+                  org.apache.thrift.protocol.TSet _set32 = iprot.readSetBegin();
+                  struct.changes = new HashSet<ByteBuffer>(2*_set32.size);
+                  for (int _i33 = 0; _i33 < _set32.size; ++_i33)
                   {
-                    ByteBuffer _elem26; // required
-                    _elem26 = iprot.readBinary();
-                    struct.changes.add(_elem26);
+                    ByteBuffer _elem34; // required
+                    _elem34 = iprot.readBinary();
+                    struct.changes.add(_elem34);
                   }
                   iprot.readSetEnd();
                 }
@@ -3603,9 +3603,9 @@ public class TTransactionServer {
           oprot.writeFieldBegin(CHANGES_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, struct.changes.size()));
-            for (ByteBuffer _iter27 : struct.changes)
+            for (ByteBuffer _iter35 : struct.changes)
             {
-              oprot.writeBinary(_iter27);
+              oprot.writeBinary(_iter35);
             }
             oprot.writeSetEnd();
           }
@@ -3642,9 +3642,9 @@ public class TTransactionServer {
         if (struct.isSetChanges()) {
           {
             oprot.writeI32(struct.changes.size());
-            for (ByteBuffer _iter28 : struct.changes)
+            for (ByteBuffer _iter36 : struct.changes)
             {
-              oprot.writeBinary(_iter28);
+              oprot.writeBinary(_iter36);
             }
           }
         }
@@ -3661,13 +3661,13 @@ public class TTransactionServer {
         }
         if (incoming.get(1)) {
           {
-            org.apache.thrift.protocol.TSet _set29 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
-            struct.changes = new HashSet<ByteBuffer>(2*_set29.size);
-            for (int _i30 = 0; _i30 < _set29.size; ++_i30)
+            org.apache.thrift.protocol.TSet _set37 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.STRING, iprot.readI32());
+            struct.changes = new HashSet<ByteBuffer>(2*_set37.size);
+            for (int _i38 = 0; _i38 < _set37.size; ++_i38)
             {
-              ByteBuffer _elem31; // required
-              _elem31 = iprot.readBinary();
-              struct.changes.add(_elem31);
+              ByteBuffer _elem39; // required
+              _elem39 = iprot.readBinary();
+              struct.changes.add(_elem39);
             }
           }
           struct.setChangesIsSet(true);
@@ -8383,13 +8383,13 @@ public class TTransactionServer {
             case 1: // TXNS
               if (schemeField.type == org.apache.thrift.protocol.TType.SET) {
                 {
-                  org.apache.thrift.protocol.TSet _set32 = iprot.readSetBegin();
-                  struct.txns = new HashSet<Long>(2*_set32.size);
-                  for (int _i33 = 0; _i33 < _set32.size; ++_i33)
+                  org.apache.thrift.protocol.TSet _set40 = iprot.readSetBegin();
+                  struct.txns = new HashSet<Long>(2*_set40.size);
+                  for (int _i41 = 0; _i41 < _set40.size; ++_i41)
                   {
-                    long _elem34; // required
-                    _elem34 = iprot.readI64();
-                    struct.txns.add(_elem34);
+                    long _elem42; // required
+                    _elem42 = iprot.readI64();
+                    struct.txns.add(_elem42);
                   }
                   iprot.readSetEnd();
                 }
@@ -8417,9 +8417,9 @@ public class TTransactionServer {
           oprot.writeFieldBegin(TXNS_FIELD_DESC);
           {
             oprot.writeSetBegin(new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.I64, struct.txns.size()));
-            for (long _iter35 : struct.txns)
+            for (long _iter43 : struct.txns)
             {
-              oprot.writeI64(_iter35);
+              oprot.writeI64(_iter43);
             }
             oprot.writeSetEnd();
           }
@@ -8450,9 +8450,9 @@ public class TTransactionServer {
         if (struct.isSetTxns()) {
           {
             oprot.writeI32(struct.txns.size());
-            for (long _iter36 : struct.txns)
+            for (long _iter44 : struct.txns)
             {
-              oprot.writeI64(_iter36);
+              oprot.writeI64(_iter44);
             }
           }
         }
@@ -8464,13 +8464,13 @@ public class TTransactionServer {
         BitSet incoming = iprot.readBitSet(1);
         if (incoming.get(0)) {
           {
-            org.apache.thrift.protocol.TSet _set37 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.I64, iprot.readI32());
-            struct.txns = new HashSet<Long>(2*_set37.size);
-            for (int _i38 = 0; _i38 < _set37.size; ++_i38)
+            org.apache.thrift.protocol.TSet _set45 = new org.apache.thrift.protocol.TSet(org.apache.thrift.protocol.TType.I64, iprot.readI32());
+            struct.txns = new HashSet<Long>(2*_set45.size);
+            for (int _i46 = 0; _i46 < _set45.size; ++_i46)
             {
-              long _elem39; // required
-              _elem39 = iprot.readI64();
-              struct.txns.add(_elem39);
+              long _elem47; // required
+              _elem47 = iprot.readI64();
+              struct.txns.add(_elem47);
             }
           }
           struct.setTxnsIsSet(true);

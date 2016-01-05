@@ -33,15 +33,18 @@ public final class TransactionConverterUtils {
                             Longs.asList(tx.getInvalids()), Longs.asList(tx.getInProgress()),
                             tx.getFirstShortInProgress(), getTTransactionType(tx.getType()),
                             tx.getWritePointer(), Longs.asList(tx.getCheckpointWritePointers()),
-                            getTVisibilityLevel(tx.getVisibilityLevel()));
+                            getTVisibilityLevel(tx.getVisibilityLevel()),
+                            Longs.asList(tx.getCommitted()));
   }
 
   public static Transaction unwrap(TTransaction thriftTx) {
-    return new Transaction(thriftTx.getReadPointer(), thriftTx.getTransactionId(), thriftTx.getWritePointer(),
-                           Longs.toArray(thriftTx.getInvalids()), Longs.toArray(thriftTx.getInProgress()),
-                           thriftTx.getFirstShort(), getTransactionType(thriftTx.getType()),
-                           Longs.toArray(thriftTx.getCheckpointWritePointers()),
-                           getVisibilityLevel(thriftTx.getVisibilityLevel()));
+    Transaction transaction = new Transaction(thriftTx.getReadPointer(), thriftTx.getTransactionId(), thriftTx.getWritePointer(),
+            Longs.toArray(thriftTx.getInvalids()), Longs.toArray(thriftTx.getInProgress()),
+            thriftTx.getFirstShort(), getTransactionType(thriftTx.getType()),
+            Longs.toArray(thriftTx.getCheckpointWritePointers()),
+            getVisibilityLevel(thriftTx.getVisibilityLevel()));
+    transaction.setCommitted(Longs.toArray(thriftTx.getCommitted()));
+    return transaction;
   }
 
   private static TransactionType getTransactionType(TTransactionType tType) {

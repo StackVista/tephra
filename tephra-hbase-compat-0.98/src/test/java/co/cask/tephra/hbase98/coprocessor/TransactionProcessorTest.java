@@ -20,16 +20,17 @@ import co.cask.tephra.ChangeId;
 import co.cask.tephra.Transaction;
 import co.cask.tephra.TransactionCodec;
 import co.cask.tephra.TransactionManager;
+import co.cask.tephra.TransactionNotInProgressException;
 import co.cask.tephra.TransactionType;
 import co.cask.tephra.TxConstants;
 import co.cask.tephra.coprocessor.TransactionStateCache;
 import co.cask.tephra.coprocessor.TransactionStateCacheSupplier;
+import co.cask.tephra.hbase98.Filters;
 import co.cask.tephra.metrics.TxMetricsCollector;
 import co.cask.tephra.persist.HDFSTransactionStateStorage;
 import co.cask.tephra.persist.TransactionSnapshot;
 import co.cask.tephra.snapshot.DefaultSnapshotCodec;
 import co.cask.tephra.snapshot.SnapshotCodecProvider;
-import co.cask.tephra.util.ConfigurationFactory;
 import co.cask.tephra.util.TxUtils;
 import com.google.common.collect.ImmutableSortedMap;
 import com.google.common.collect.Lists;
@@ -49,9 +50,12 @@ import org.apache.hadoop.hbase.ServerName;
 import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.catalog.CatalogTracker;
 import org.apache.hadoop.hbase.client.Delete;
+import org.apache.hadoop.hbase.client.Get;
 import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.executor.ExecutorService;
+import org.apache.hadoop.hbase.filter.Filter;
 import org.apache.hadoop.hbase.fs.HFileSystem;
 import org.apache.hadoop.hbase.ipc.RpcServerInterface;
 import org.apache.hadoop.hbase.master.TableLockManager;
@@ -87,6 +91,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -517,6 +522,99 @@ public class TransactionProcessorTest {
     // make sure we don't overflow with MAX_VALUE write pointer
     assertEquals(Long.MAX_VALUE, new TransactionProcessor().getMaxVisibleTimestamp(Transaction.ALL_VISIBLE_LATEST,
       new Scan()));
+  }
+
+  @Test
+  public void testReadCommited() throws Exception {
+    String tableName = "TestRegionScanner";
+    byte[] familyBytes = Bytes.toBytes("f");
+    byte[] columnBytes = Bytes.toBytes("c");
+    byte[] id = Bytes.toBytes("rowId");
+    byte[] idInProgress = Bytes.toBytes("inprogress");
+    byte[] idRolledBack = Bytes.toBytes("rolledback");
+    HRegion region = createRegion(tableName, familyBytes, TimeUnit.HOURS.toMillis(3));
+    try {
+      region.initialize();
+      TransactionStateCache cache = new TransactionStateCacheSupplier(conf).get();
+      LOG.info("Coprocessor is using transaction state: " + cache.getLatestState());
+
+      // force a flush to clear the data
+      // during flush, the coprocessor should drop all KeyValues with timestamps in the invalid set
+      LOG.info("Flushing region " + region.getRegionNameAsString());
+      region.flushcache();
+
+      Transaction readTx = txManager.startShort();
+
+      Thread.sleep(100L);
+
+      Transaction inprogress = txManager.startShort();
+      doPut(familyBytes, columnBytes, idInProgress, region, inprogress);
+
+      Thread.sleep(100L);
+
+      doPutAndRollback(familyBytes, columnBytes, idRolledBack, region);
+
+      Thread.sleep(100L);
+
+      long insertedTxId = doPutAndCommit(familyBytes, columnBytes, id, region);
+      readTx.setCommitted(new long[] {insertedTxId});
+
+      assertGet(id, region, readTx, familyBytes, columnBytes, Bytes.toBytes(insertedTxId));
+      assertGetInvisible(idInProgress, region, readTx, familyBytes, columnBytes);
+      assertGetInvisible(idRolledBack, region, readTx, familyBytes, columnBytes);
+
+      txManager.canCommit(readTx, Collections.singleton(id));
+      txManager.commit(readTx);
+    } finally {
+      region.close();
+    }
+  }
+
+  private void assertGetInvisible(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes) throws IOException {
+    Result result = resultGet(id, region, readTx);
+    assertEquals(0, result.size());
+  }
+
+  private void assertGet(byte[] id, HRegion region, Transaction readTx, byte[] familyBytes, byte[] columnBytes, byte[] valueBytes) throws IOException {
+    Result result = resultGet(id, region, readTx);
+    List<Cell> cells = result.getColumnCells(familyBytes, columnBytes);
+    assertEquals(1, cells.size());
+    Cell cell = cells.get(0);
+    assertArrayEquals(valueBytes, cell.getValue());
+  }
+
+  private Result resultGet(byte[] id, HRegion region, Transaction readTx) throws IOException {
+    Get get = new Get(id);
+    get.setTimeRange(0, readTx.getVisibilityUpperBound());
+    get.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(readTx));
+    return region.get(get);
+  }
+
+  private long doPutAndCommit(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region) throws IOException, TransactionNotInProgressException {
+    Transaction tx = txManager.startShort();
+
+    doPut(familyBytes, columnBytes, id, region, tx);
+
+    assertTrue(txManager.canCommit(tx, Collections.singleton(id)));
+    txManager.commit(tx);
+    return tx.getTransactionId();
+  }
+
+  private long doPutAndRollback(byte[] familyBytes, byte[] columnBytes, byte[] id, HRegion region) throws IOException, TransactionNotInProgressException {
+    Transaction tx = txManager.startShort();
+
+    doPut(familyBytes, columnBytes, id, region, tx);
+
+    txManager.abort(tx);
+    return tx.getTransactionId();
+  }
+
+  private void doPut(byte[] familyBytes, byte[] columnBytes, byte[] row1, HRegion region, Transaction tx) throws IOException {
+    long ts = System.currentTimeMillis();
+    Put p = new Put(row1);
+    p.setAttribute(TxConstants.TX_OPERATION_ATTRIBUTE_KEY, txCodec.encode(tx));
+    p.add(familyBytes, columnBytes, tx.getTransactionId(), Bytes.toBytes(tx.getTransactionId()));
+    region.put(p);
   }
 
   private static class MockRegionServerServices implements RegionServerServices {

@@ -56,18 +56,18 @@
   <repositories>
     <repository>
       <id>stackstate.artifactory</id>
-      <url>http://54.194.173.64/artifactory/libs</url>
+      <url>http://artifactory.stackstate.com/artifactory/libs</url>
     </repository>
   </repositories>
 
   <distributionManagement>
     <repository>
       <id>stackstate.artifactory</id>
-      <url>http://54.194.173.64/artifactory/libs</url>
+      <url>http://artifactory.stackstate.com/artifactory/libs</url>
     </repository>
     <snapshotRepository>
       <id>sonatype.snapshots</id>
-      <url>http://54.194.173.64/artifactory/libs</url>
+      <url>http://artifactory.stackstate.com/artifactory/libs</url>
     </snapshotRepository>
   </distributionManagement>
 

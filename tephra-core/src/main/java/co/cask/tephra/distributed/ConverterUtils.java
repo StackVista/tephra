@@ -28,6 +28,10 @@ import java.util.List;
 final class ConverterUtils {
 
   public static TTransaction wrap(Transaction tx) {
+    List<Long> touchedNoInvalids = Lists.newArrayListWithCapacity(tx.getTouchedNoInvalids().length);
+    for(long txid: tx.getTouchedNoInvalids()) {
+      touchedNoInvalids.add(txid);
+    }
     List<Long> invalids = Lists.newArrayListWithCapacity(tx.getInvalids().length);
     for (long txid : tx.getInvalids()) {
       invalids.add(txid);
@@ -36,13 +40,19 @@ final class ConverterUtils {
     for (long txid : tx.getInProgress()) {
       inProgress.add(txid);
     }
-    return new TTransaction(tx.getWritePointer(), tx.getReadPointer(),
+
+    return new TTransaction(tx.getWritePointer(), tx.getReadPointer(), touchedNoInvalids,
                              invalids, inProgress, tx.getFirstShortInProgress());
   }
 
   public static Transaction unwrap(TTransaction tx) {
-    long[] invalids = new long[tx.invalids.size()];
+    long[] touchedNoInvalids = new long[tx.touchedNoInvalids.size()];
     int i = 0;
+    for(Long txid : tx.touchedNoInvalids){
+      touchedNoInvalids[i++] = txid;
+    }
+    long[] invalids = new long[tx.invalids.size()];
+    i = 0;
     for (Long txid : tx.invalids) {
       invalids[i++] = txid;
     }
@@ -51,7 +61,7 @@ final class ConverterUtils {
     for (Long txid : tx.inProgress) {
       inProgress[i++] = txid;
     }
-    return new Transaction(tx.readPointer, tx.writePointer,
-                                                             invalids, inProgress, tx.getFirstShort());
+    return new Transaction(tx.readPointer, tx.writePointer, 
+                                  touchedNoInvalids, invalids, inProgress, tx.getFirstShort());
   }
 }

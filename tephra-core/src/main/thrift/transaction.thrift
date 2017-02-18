@@ -17,9 +17,10 @@ namespace java co.cask.tephra.distributed.thrift
 struct TTransaction {
   1: i64 writePointer,
   2: i64 readPointer,
-  3: list<i64> invalids,
-  4: list<i64> inProgress,
-  5: i64 firstShort,
+  3: list<i64> touchedNoInvalids,
+  4: list<i64> invalids,
+  5: list<i64> inProgress,
+  6: i64 firstShort,
 }
 
 exception TTransactionNotInProgressException {

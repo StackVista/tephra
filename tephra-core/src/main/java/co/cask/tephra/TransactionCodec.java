@@ -35,9 +35,9 @@ public class TransactionCodec {
   }
 
   public byte[] encode(Transaction tx) throws IOException {
-    TTransaction thriftTx = new TTransaction(tx.getWritePointer(), tx.getReadPointer(),
-                                             Longs.asList(tx.getInvalids()), Longs.asList(tx.getInProgress()),
-                                             tx.getFirstShortInProgress());
+    TTransaction thriftTx = new TTransaction(tx.getWritePointer(), tx.getReadPointer(), Longs.asList(tx.getTouchedNoInvalids()),
+      Longs.asList(tx.getInvalids()), Longs.asList(tx.getInProgress()),
+      tx.getFirstShortInProgress());
     TSerializer serializer = new TSerializer();
     try {
       return serializer.serialize(thriftTx);
@@ -51,7 +51,7 @@ public class TransactionCodec {
     TDeserializer deserializer = new TDeserializer();
     try {
       deserializer.deserialize(thriftTx, encoded);
-      return new Transaction(thriftTx.getReadPointer(), thriftTx.getWritePointer(),
+      return new Transaction(thriftTx.getReadPointer(), thriftTx.getWritePointer(), Longs.toArray(thriftTx.getTouchedNoInvalids()),
                              Longs.toArray(thriftTx.getInvalids()), Longs.toArray(thriftTx.getInProgress()),
                              thriftTx.getFirstShort());
     } catch (TException te) {

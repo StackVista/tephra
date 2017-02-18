@@ -98,6 +98,7 @@ public class TransactionServiceClient implements TransactionSystemClient {
       } else {
         LOG.info("Started tx: " + tx.getWritePointer() +
                    ", readPointer: " + tx.getReadPointer() +
+                   ", touchedNoInvalids: " + tx.getTouchedNoInvalids() +
                    ", invalids: " + tx.getInvalids().length +
                    ", inProgress: " + tx.getInProgress().length);
       }
